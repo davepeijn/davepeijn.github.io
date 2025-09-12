@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Spotify QR Scanner</title>
   <style>
     body { margin:0; padding:18px; font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial; background:#fafafa; color:#111; text-align:center; }
@@ -10,7 +10,6 @@
     p.lead { margin:0 0 16px; color:#444; }
     #reader { width:100%; max-width:640px; margin:10px auto; border-radius:10px; overflow:hidden; background:#000; }
     #status { margin-top:12px; color:#666; font-size:0.95rem; }
-    #openButton { display:none; margin-top:16px; padding:16px 32px; font-size:1.1rem; background:#1db954; color:#fff; border:none; border-radius:12px; }
     small { color:#777; }
   </style>
 </head>
@@ -18,38 +17,37 @@
   <h1>Spotify QR Scanner</h1>
   <p class="lead">Open deze pagina op je iPhone. Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt.</p>
   <div id="reader"></div>
-  <button id="openButton">Open in Spotify</button>
   <div id="status"><small>Deze pagina scant gewone QR-codes/URLs, niet de speciale Spotify-codes uit de app.</small></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
-      const openButton = document.getElementById('openButton');
       const config = { fps: 10, qrbox: 250 };
       let html5QrCode = new Html5Qrcode('reader');
-      let currentTrackId = null;
 
       function showStatus(msg) { status.textContent = msg; }
 
-      function parseSpotifyTrackId(text) {
-        let trackId = null;
+      function parseSpotifyLink(text) {
+        let appLink = null;
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
-          if (parts[1] === 'track' && parts[2]) trackId = parts[2];
+          if (parts[1] === 'track' && parts[2]) {
+            appLink = 'spotify://track/' + parts[2];
+          }
         } else if (text.includes('open.spotify.com/track/')) {
           const match = text.match(/track\/([a-zA-Z0-9]+)/);
-          if (match) trackId = match[1];
+          if (match) {
+            appLink = 'spotify://track/' + match[1];
+          }
         }
-        return trackId;
+        return appLink;
       }
 
       function onScanSuccess(decodedText, decodedResult) {
-        const trackId = parseSpotifyTrackId(decodedText);
-        if (trackId) {
-          currentTrackId = trackId;
-          openButton.style.display = 'inline-block';
-          showStatus('QR-code gedetecteerd. Tik op de knop om Spotify te openen.');
+        const appLink = parseSpotifyLink(decodedText);
+        if (appLink) {
+          window.location.href = appLink;
         }
       }
 
@@ -66,13 +64,6 @@
           .then(()=>showStatus('Camera gestart — richt de camera op de QR-code'))
           .catch(e=>showStatus('Kan camera niet starten: '+e));
       }
-
-      openButton.addEventListener('click', function() {
-        if (!currentTrackId) return;
-        // **gebruikers-trigger** voor iOS, garandeert openen van de app
-        const spotifyAppLink = 'spotify://track/' + currentTrackId;
-        window.location.href = spotifyAppLink;
-      });
 
       Html5Qrcode.getCameras()
         .then(cameras=>{
