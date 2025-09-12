@@ -5,92 +5,89 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Spotify QR Scanner</title>
   <style>
-  /* Fonts & body */
-  @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
-  body {
-    margin: 0;
-    padding: 18px;
-    background: #000;
-    color: #fff;
-    text-align: center;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial;
-  }
+    body {
+      margin: 0;
+      padding: 18px;
+      background: #000;
+      color: #fff;
+      text-align: center;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial;
+    }
 
-  /* Wrapper */
-  .wrap {
-    max-width: 760px;
-    margin: 0 auto;
-  }
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
 
-  /* Logo & Name */
-  #logo {
-    max-width: 150px;
-    margin: 0 auto 10px;
-  }
+    /* Logo & naam */
+    #logo {
+      max-width: 150px;
+      margin: 0 auto 10px;
+    }
 
-  #name {
-    font-family: 'Pacifico', cursive;
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    color: #1db954;
-  }
+    #name {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #1db954;
+    }
 
-  /* Scanner box */
-  #reader {
-    width: 100%;
-    max-width: 640px;
-    margin: 10px auto;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #111;
-    border: 4px solid #1db954;
-    box-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
-    position: relative;
-  }
+    /* Scanner box */
+    #reader {
+      width: 100%;
+      max-width: 640px;
+      margin: 10px auto;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #111;
+      border: 4px solid #1db954;
+      box-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+      position: relative;
+    }
 
-  /* Result box */
-  #result {
-    margin-top: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    background: #222;
-    box-shadow: 0 1px 6px rgba(0,0,0,.5);
-    display: none;
-    color: #fff;
-  }
+    /* Result box */
+    #result {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #222;
+      box-shadow: 0 1px 6px rgba(0,0,0,.5);
+      display: none;
+      color: #fff;
+    }
 
-  /* Buttons */
-  .btn {
-    display: inline-block;
-    padding: 10px 14px;
-    margin-right: 8px;
-    border-radius: 8px;
-    background: #1db954;
-    color: #fff;
-    text-decoration: none;
-  }
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 10px 14px;
+      margin-right: 8px;
+      border-radius: 8px;
+      background: #1db954;
+      color: #fff;
+      text-decoration: none;
+    }
 
-  button {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 0;
-    background: #0070f3;
-    color: #fff;
-  }
+    button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 0;
+      background: #0070f3;
+      color: #fff;
+    }
 
-  /* Status text */
-  #status {
-    margin-top: 12px;
-    color: #aaa;
-    font-size: 0.95rem;
-  }
+    /* Status */
+    #status {
+      margin-top: 12px;
+      color: #aaa;
+      font-size: 0.95rem;
+    }
 
-  small {
-    color: #777;
-  }
-</style>
-
+    small {
+      color: #777;
+    }
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -100,20 +97,24 @@
     <div id="reader"></div>
 
     <div id="result">
-      <p id="decodedText"></p>
       <a id="openLink" class="btn" target="_blank" rel="noopener">Open in Spotify</a>
       <button id="scanAgain">Scan opnieuw</button>
     </div>
 
-    <p id="status"><small>Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.</small></p>
+    <p id="status">
+      <small>
+        Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. 
+        Deze pagina scant gewone QR-codes/URLs.
+      </small>
+    </p>
   </div>
 
+  <!-- html5-qrcode library (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
-      const decodedTextEl = document.getElementById('decodedText');
       const openLink = document.getElementById('openLink');
       const scanAgainBtn = document.getElementById('scanAgain');
       const resultDiv = document.getElementById('result');
@@ -124,8 +125,8 @@
       function showStatus(msg) { status.textContent = msg; }
 
       function handleScanText(text) {
-        decodedTextEl.textContent = text;
         resultDiv.style.display = 'block';
+
         let link = null;
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
@@ -135,12 +136,14 @@
         } else if (/^https?:\/\//i.test(text)) {
           link = text;
         }
+
         if (link) {
           openLink.href = link;
           openLink.style.display = 'inline-block';
         } else {
           openLink.style.display = 'none';
         }
+
         html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
       }
 
@@ -148,8 +151,11 @@
         handleScanText(decodedText);
       }
 
-      function onScanFailure(error) {}
+      function onScanFailure(error) {
+        // geen melding bij mislukte scan
+      }
 
+      // Start camera
       html5QrCode
         .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
         .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
@@ -158,8 +164,7 @@
           Html5Qrcode.getCameras()
             .then((cameras) => {
               if (!cameras || cameras.length === 0) { showStatus('Geen camera gevonden'); return; }
-              let cameraId = cameras[0].id;
-              for (const cam of cameras) { if (/(back|rear|environment)/i.test(cam.label)) { cameraId = cam.id; break; } }
+              let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
               html5QrCode
                 .start(cameraId, config, onScanSuccess, onScanFailure)
                 .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
@@ -168,9 +173,9 @@
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
         });
 
+      // Scan opnieuw
       scanAgainBtn.addEventListener('click', function () {
         resultDiv.style.display = 'none';
-        decodedTextEl.textContent = '';
         showStatus('Scanner herstarten...');
         Html5Qrcode.getCameras()
           .then((cameras) => {
