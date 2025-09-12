@@ -10,7 +10,7 @@
     p.lead { margin:0 0 16px; color:#444; }
     #reader { width:100%; max-width:640px; margin:10px auto; border-radius:10px; overflow:hidden; background:#000; }
     #status { margin-top:12px; color:#666; font-size:0.95rem; }
-    #openButton { display:none; margin-top:16px; padding:12px 24px; font-size:1rem; background:#1db954; color:#fff; border:none; border-radius:10px; }
+    #openButton { display:none; margin-top:16px; padding:16px 32px; font-size:1.1rem; background:#1db954; color:#fff; border:none; border-radius:12px; }
     small { color:#777; }
   </style>
 </head>
@@ -49,6 +49,7 @@
         if (trackId) {
           currentTrackId = trackId;
           openButton.style.display = 'inline-block';
+          showStatus('QR-code gedetecteerd. Tik op de knop om Spotify te openen.');
         }
       }
 
@@ -68,12 +69,9 @@
 
       openButton.addEventListener('click', function() {
         if (!currentTrackId) return;
+        // **gebruikers-trigger** voor iOS, garandeert openen van de app
         const spotifyAppLink = 'spotify://track/' + currentTrackId;
-        const spotifyWebLink = 'https://open.spotify.com/track/' + currentTrackId;
-        // opent de app via gebruikerstrigger
         window.location.href = spotifyAppLink;
-        // fallback naar webversie na 1.5s
-        setTimeout(()=>{ window.location.href = spotifyWebLink; }, 1500);
       });
 
       Html5Qrcode.getCameras()
