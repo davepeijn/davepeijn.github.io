@@ -61,7 +61,9 @@
         }
 
         if (appLink) {
-          // toon countdown
+          // eerst proberen app te openen -> dit triggert de iOS-popup
+          window.location.href = appLink;
+          // toon countdown in Safari (achtergrond)
           let counter = 5;
           countdownEl.style.display = 'block';
           countdownEl.textContent = 'Nummer start in ' + counter + '…';
@@ -72,9 +74,7 @@
             } else {
               clearInterval(timer);
               countdownEl.textContent = 'Start!';
-              // probeer app te openen
-              window.location.href = appLink;
-              // fallback naar webversie
+              // fallback naar webversie (indien app niet opent)
               setTimeout(() => {
                 if (webLink) window.location.href = webLink;
               }, 1500);
