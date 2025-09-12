@@ -10,6 +10,7 @@
     p.lead { margin:0 0 16px; color:#444; }
     #reader { width:100%; max-width:640px; margin:10px auto; border-radius:10px; overflow:hidden; background:#000; }
     #status { margin-top:12px; color:#666; font-size:0.95rem; }
+    #openButton { display:none; margin-top:16px; padding:12px 24px; font-size:1rem; background:#1db954; color:#fff; border:none; border-radius:10px; }
     small { color:#777; }
   </style>
 </head>
@@ -17,15 +18,17 @@
   <h1>Spotify QR Scanner</h1>
   <p class="lead">Open deze pagina op je iPhone. Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt.</p>
   <div id="reader"></div>
+  <button id="openButton">Open in Spotify</button>
   <div id="status"><small>Deze pagina scant gewone QR-codes/URLs, niet de speciale Spotify-codes uit de app.</small></div>
 
-  <!-- html5-qrcode library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
+      const openButton = document.getElementById('openButton');
       const config = { fps: 10, qrbox: 250 };
       let html5QrCode = new Html5Qrcode('reader');
+      let currentTrackId = null;
 
       function showStatus(msg) { status.textContent = msg; }
 
@@ -41,17 +44,11 @@
         return trackId;
       }
 
-      function openRedirect(trackId) {
-        if (!trackId) return;
-        // open redirect.html in nieuwe tab, zodat index.html tab blijft open
-        const redirectUrl = `redirect.html?track=${trackId}`;
-        window.open(redirectUrl, '_blank');
-      }
-
       function onScanSuccess(decodedText, decodedResult) {
         const trackId = parseSpotifyTrackId(decodedText);
         if (trackId) {
-          openRedirect(trackId);
+          currentTrackId = trackId;
+          openButton.style.display = 'inline-block';
         }
       }
 
@@ -68,6 +65,16 @@
           .then(()=>showStatus('Camera gestart — richt de camera op de QR-code'))
           .catch(e=>showStatus('Kan camera niet starten: '+e));
       }
+
+      openButton.addEventListener('click', function() {
+        if (!currentTrackId) return;
+        const spotifyAppLink = 'spotify://track/' + currentTrackId;
+        const spotifyWebLink = 'https://open.spotify.com/track/' + currentTrackId;
+        // opent de app via gebruikerstrigger
+        window.location.href = spotifyAppLink;
+        // fallback naar webversie na 1.5s
+        setTimeout(()=>{ window.location.href = spotifyWebLink; }, 1500);
+      });
 
       Html5Qrcode.getCameras()
         .then(cameras=>{
