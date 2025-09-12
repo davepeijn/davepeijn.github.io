@@ -6,12 +6,12 @@
   <title>Spotify QR Scanner</title>
   <style>
     :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial;}
-    body{margin:0;padding:18px;background:#fafafa;color:#111}
+    body{margin:0;padding:18px;background:#fafafa;color:#111;text-align:center}
     .wrap{max-width:760px;margin:0 auto}
     h1{font-size:1.3rem;margin:0 0 8px}
     p.lead{margin:0 0 16px;color:#444}
     #reader{width:100%;max-width:640px;margin:10px auto;border-radius:10px;overflow:hidden;background:#000}
-    #result{margin-top:12px;padding:12px;border-radius:8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none}
+    #countdown{font-size:2rem;font-weight:bold;margin-top:20px;display:none}
     #status{margin-top:12px;color:#666;font-size:0.95rem}
     small{color:#777}
   </style>
@@ -19,15 +19,12 @@
 <body>
   <div class="wrap">
     <h1>Spotify QR Scanner</h1>
-    <p class="lead">Open deze pagina op je iPhone (Safari of Chrome). Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt (bijv. https://open.spotify.com/track/...).</p>
+    <p class="lead">Open deze pagina op je iPhone. Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt.</p>
 
     <div id="reader"></div>
+    <div id="countdown"></div>
 
-    <div id="result">
-      <p id="decodedText"></p>
-    </div>
-
-    <p id="status"><small>Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.</small></p>
+    <p id="status"><small>Tip: Deze pagina scant gewone QR-codes/URLs, geen Spotify Codes (de balkjes in de Spotify-app).</small></p>
   </div>
 
   <!-- html5-qrcode library (CDN) -->
@@ -36,19 +33,13 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
-      const decodedTextEl = document.getElementById('decodedText');
-      const resultDiv = document.getElementById('result');
-
+      const countdownEl = document.getElementById('countdown');
       const config = { fps: 10, qrbox: 250 };
-
       const html5QrCode = new Html5Qrcode('reader');
 
       function showStatus(msg) { status.textContent = msg; }
 
       function handleScanText(text) {
-        decodedTextEl.textContent = text;
-        resultDiv.style.display = 'block';
-
         let appLink = null;
         let webLink = null;
 
@@ -70,12 +61,25 @@
         }
 
         if (appLink) {
-          // probeer eerst app te openen
-          window.location.href = appLink;
-          // fallback naar web na korte timeout
-          setTimeout(() => {
-            if (webLink) window.location.href = webLink;
-          }, 1500);
+          // toon countdown
+          let counter = 5;
+          countdownEl.style.display = 'block';
+          countdownEl.textContent = 'Nummer start in ' + counter + '…';
+          const timer = setInterval(() => {
+            counter--;
+            if (counter > 0) {
+              countdownEl.textContent = 'Nummer start in ' + counter + '…';
+            } else {
+              clearInterval(timer);
+              countdownEl.textContent = 'Start!';
+              // probeer app te openen
+              window.location.href = appLink;
+              // fallback naar webversie
+              setTimeout(() => {
+                if (webLink) window.location.href = webLink;
+              }, 1500);
+            }
+          }, 1000);
         } else if (webLink) {
           window.location.href = webLink;
         }
