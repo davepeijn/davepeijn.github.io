@@ -5,72 +5,132 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Spotify QR Scanner</title>
   <style>
-    body { margin:0; padding:18px; font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial; background:#fafafa; color:#111; text-align:center; }
-    h1 { font-size:1.3rem; margin:0 0 8px; }
-    p.lead { margin:0 0 16px; color:#444; }
-    #reader { width:100%; max-width:640px; margin:10px auto; border-radius:10px; overflow:hidden; background:#000; }
-    #status { margin-top:12px; color:#666; font-size:0.95rem; }
-    small { color:#777; }
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial;}
+    body{margin:0;padding:18px;background:#fafafa;color:#111}
+    .wrap{max-width:760px;margin:0 auto}
+    h1{font-size:1.3rem;margin:0 0 8px}
+    p.lead{margin:0 0 16px;color:#444}
+    #reader{width:100%;max-width:640px;margin:10px auto;border-radius:10px;overflow:hidden;background:#000}
+    #result{margin-top:12px;padding:12px;border-radius:8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none}
+    .btn{display:inline-block;padding:10px 14px;margin-right:8px;border-radius:8px;background:#1db954;color:#fff;text-decoration:none}
+    button{padding:10px 14px;border-radius:8px;border:0;background:#0070f3;color:#fff}
+    #status{margin-top:12px;color:#666;font-size:0.95rem}
+    small{color:#777}
   </style>
 </head>
 <body>
-  <h1>Spotify QR Scanner</h1>
-  <p class="lead">Open deze pagina op je iPhone. Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt.</p>
-  <div id="reader"></div>
-  <div id="status"><small>Deze pagina scant gewone QR-codes/URLs, niet de speciale Spotify-codes uit de app.</small></div>
+  <div class="wrap">
+    <h1>Spotify QR Scanner</h1>
+    <p class="lead">Open deze pagina op je iPhone (Safari of Chrome). Geef camera-toegang en richt de camera op een QR-code die naar een Spotify-track linkt (bijv. https://open.spotify.com/track/...).</p>
 
+    <div id="reader"></div>
+
+    <div id="result">
+      <p id="decodedText"></p>
+      <a id="openLink" class="btn" target="_blank" rel="noopener">Open in Spotify</a>
+      <button id="scanAgain">Scan opnieuw</button>
+    </div>
+
+    <p id="status"><small>Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.</small></p>
+  </div>
+
+  <!-- html5-qrcode library (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
+      const decodedTextEl = document.getElementById('decodedText');
+      const openLink = document.getElementById('openLink');
+      const scanAgainBtn = document.getElementById('scanAgain');
+      const resultDiv = document.getElementById('result');
+
       const config = { fps: 10, qrbox: 250 };
-      let html5QrCode = new Html5Qrcode('reader');
+
+      // create scanner instance
+      const html5QrCode = new Html5Qrcode('reader');
 
       function showStatus(msg) { status.textContent = msg; }
 
-      function parseSpotifyLink(text) {
-        let appLink = null;
+      function handleScanText(text) {
+        decodedTextEl.textContent = text;
+        resultDiv.style.display = 'block';
+
+        let link = null;
+        // spotify URI -> convert to open.spotify.com
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
-          if (parts[1] === 'track' && parts[2]) {
-            appLink = 'spotify://track/' + parts[2];
-          }
-        } else if (text.includes('open.spotify.com/track/')) {
-          const match = text.match(/track\/([a-zA-Z0-9]+)/);
-          if (match) {
-            appLink = 'spotify://track/' + match[1];
-          }
+          if (parts[1] === 'track' && parts[2]) link = 'https://open.spotify.com/track/' + parts[2];
+        } else if (text.includes('open.spotify.com')) {
+          link = text;
+        } else if (/^https?:\/\//i.test(text)) {
+          link = text;
         }
-        return appLink;
+
+        if (link) {
+          openLink.href = link;
+          openLink.style.display = 'inline-block';
+        } else {
+          openLink.style.display = 'none';
+        }
+
+        // stop camera
+        html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
       }
 
       function onScanSuccess(decodedText, decodedResult) {
-        const appLink = parseSpotifyLink(decodedText);
-        if (appLink) {
-          window.location.href = appLink;
-        }
+        // called when a code is scanned
+        handleScanText(decodedText);
       }
 
       function onScanFailure(error) {
-        // noop
+        // optional: console.log('scan failure', error);
       }
 
-      function startScanner(cameras) {
-        let cameraId = cameras[0]?.id;
-        for (const cam of cameras) {
-          if (/(back|rear|environment)/i.test(cam.label)) { cameraId = cam.id; break; }
-        }
-        html5QrCode.start(cameraId, config, onScanSuccess, onScanFailure)
-          .then(()=>showStatus('Camera gestart — richt de camera op de QR-code'))
-          .catch(e=>showStatus('Kan camera niet starten: '+e));
-      }
+      // Try to start with the back camera (environment). If that fails, fallback to enumerating cameras.
+      html5QrCode
+        .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
+        .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+        .catch((err) => {
+          showStatus('Kon achtercamera niet direct openen, probeer fallback...');
 
-      Html5Qrcode.getCameras()
-        .then(cameras=>{
-          if (!cameras || cameras.length===0) { showStatus('Geen camera gevonden'); return; }
-          startScanner(cameras);
-        })
-        .catch(e=>showStatus('Fout bij camera-toegang: '+e));
+          Html5Qrcode.getCameras()
+            .then((cameras) => {
+              if (!cameras || cameras.length === 0) {
+                showStatus('Geen camera gevonden op dit apparaat');
+                return;
+              }
+
+              // kies camera: liever een camera met 'back'/'rear'/'environment' in de label
+              let cameraId = cameras[0].id;
+              for (const cam of cameras) {
+                if (/(back|rear|environment)/i.test(cam.label)) { cameraId = cam.id; break; }
+              }
+
+              html5QrCode
+                .start(cameraId, config, onScanSuccess, onScanFailure)
+                .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+                .catch((e) => showStatus('Kon camera niet starten: ' + e));
+            })
+            .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
+        });
+
+      scanAgainBtn.addEventListener('click', function () {
+        resultDiv.style.display = 'none';
+        decodedTextEl.textContent = '';
+        showStatus('Scanner herstarten...');
+
+        Html5Qrcode.getCameras()
+          .then((cameras) => {
+            if (!cameras || cameras.length === 0) { showStatus('Geen camera gevonden'); return; }
+            let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
+            html5QrCode
+              .start(cameraId, config, onScanSuccess, onScanFailure)
+              .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+              .catch((e) => showStatus('Kon camera niet starten: ' + e));
+          })
+          .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
+      });
     });
   </script>
 </body>
