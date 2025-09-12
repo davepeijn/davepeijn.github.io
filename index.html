@@ -1,4 +1,10 @@
-<style>
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Spotify QR Scanner</title>
+  <style>
   /* Fonts & body */
   @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
@@ -84,3 +90,100 @@
     color: #777;
   }
 </style>
+
+</head>
+<body>
+  <div class="wrap">
+    <img id="logo" src="hitster-logo.png" alt="Hitster Logo">
+    <div id="name">Joyce</div>
+
+    <div id="reader"></div>
+
+    <div id="result">
+      <p id="decodedText"></p>
+      <a id="openLink" class="btn" target="_blank" rel="noopener">Open in Spotify</a>
+      <button id="scanAgain">Scan opnieuw</button>
+    </div>
+
+    <p id="status"><small>Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.</small></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const status = document.getElementById('status');
+      const decodedTextEl = document.getElementById('decodedText');
+      const openLink = document.getElementById('openLink');
+      const scanAgainBtn = document.getElementById('scanAgain');
+      const resultDiv = document.getElementById('result');
+
+      const config = { fps: 10, qrbox: 250 };
+      const html5QrCode = new Html5Qrcode('reader');
+
+      function showStatus(msg) { status.textContent = msg; }
+
+      function handleScanText(text) {
+        decodedTextEl.textContent = text;
+        resultDiv.style.display = 'block';
+        let link = null;
+        if (text.startsWith('spotify:')) {
+          const parts = text.split(':');
+          if (parts[1] === 'track' && parts[2]) link = 'https://open.spotify.com/track/' + parts[2];
+        } else if (text.includes('open.spotify.com')) {
+          link = text;
+        } else if (/^https?:\/\//i.test(text)) {
+          link = text;
+        }
+        if (link) {
+          openLink.href = link;
+          openLink.style.display = 'inline-block';
+        } else {
+          openLink.style.display = 'none';
+        }
+        html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
+      }
+
+      function onScanSuccess(decodedText, decodedResult) {
+        handleScanText(decodedText);
+      }
+
+      function onScanFailure(error) {}
+
+      html5QrCode
+        .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
+        .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+        .catch((err) => {
+          showStatus('Kon achtercamera niet direct openen, probeer fallback...');
+          Html5Qrcode.getCameras()
+            .then((cameras) => {
+              if (!cameras || cameras.length === 0) { showStatus('Geen camera gevonden'); return; }
+              let cameraId = cameras[0].id;
+              for (const cam of cameras) { if (/(back|rear|environment)/i.test(cam.label)) { cameraId = cam.id; break; } }
+              html5QrCode
+                .start(cameraId, config, onScanSuccess, onScanFailure)
+                .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+                .catch((e) => showStatus('Kon camera niet starten: ' + e));
+            })
+            .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
+        });
+
+      scanAgainBtn.addEventListener('click', function () {
+        resultDiv.style.display = 'none';
+        decodedTextEl.textContent = '';
+        showStatus('Scanner herstarten...');
+        Html5Qrcode.getCameras()
+          .then((cameras) => {
+            if (!cameras || cameras.length === 0) { showStatus('Geen camera gevonden'); return; }
+            let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
+            html5QrCode
+              .start(cameraId, config, onScanSuccess, onScanFailure)
+              .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+              .catch((e) => showStatus('Kon camera niet starten: ' + e));
+          })
+          .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
+      });
+    });
+  </script>
+</body>
+</html>
