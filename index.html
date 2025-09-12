@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Spotify QR Scanner</title>
   <style>
     body { margin:0; padding:18px; font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial; background:#fafafa; color:#111; text-align:center; }
@@ -29,7 +29,7 @@
 
       function showStatus(msg) { status.textContent = msg; }
 
-      function parseSpotifyLink(text) {
+      function parseSpotifyTrackId(text) {
         let trackId = null;
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
@@ -38,14 +38,20 @@
           const match = text.match(/track\/([a-zA-Z0-9]+)/);
           if (match) trackId = match[1];
         }
-        return trackId ? `redirect.html?track=${trackId}` : null;
+        return trackId;
+      }
+
+      function openRedirect(trackId) {
+        if (!trackId) return;
+        // open redirect.html in nieuwe tab, zodat index.html tab blijft open
+        const redirectUrl = `redirect.html?track=${trackId}`;
+        window.open(redirectUrl, '_blank');
       }
 
       function onScanSuccess(decodedText, decodedResult) {
-        const redirectUrl = parseSpotifyLink(decodedText);
-        if (redirectUrl) {
-          // open redirect page in dezelfde tab
-          window.location.href = redirectUrl;
+        const trackId = parseSpotifyTrackId(decodedText);
+        if (trackId) {
+          openRedirect(trackId);
         }
       }
 
