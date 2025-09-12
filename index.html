@@ -49,19 +49,35 @@
         decodedTextEl.textContent = text;
         resultDiv.style.display = 'block';
 
-        let link = null;
+        let appLink = null;
+        let webLink = null;
+
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
-          if (parts[1] === 'track' && parts[2]) link = 'https://open.spotify.com/track/' + parts[2];
-        } else if (text.includes('open.spotify.com')) {
-          link = text;
+          if (parts[1] === 'track' && parts[2]) {
+            appLink = 'spotify://track/' + parts[2];
+            webLink = 'https://open.spotify.com/track/' + parts[2];
+          }
+        } else if (text.includes('open.spotify.com/track/')) {
+          const match = text.match(/track\/([a-zA-Z0-9]+)/);
+          if (match) {
+            const trackId = match[1];
+            appLink = 'spotify://track/' + trackId;
+            webLink = 'https://open.spotify.com/track/' + trackId;
+          }
         } else if (/^https?:\/\//i.test(text)) {
-          link = text;
+          webLink = text;
         }
 
-        if (link) {
-          // open direct
-          window.location.href = link;
+        if (appLink) {
+          // probeer eerst app te openen
+          window.location.href = appLink;
+          // fallback naar web na korte timeout
+          setTimeout(() => {
+            if (webLink) window.location.href = webLink;
+          }, 1500);
+        } else if (webLink) {
+          window.location.href = webLink;
         }
 
         html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
