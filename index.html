@@ -12,8 +12,6 @@
     p.lead{margin:0 0 16px;color:#444}
     #reader{width:100%;max-width:640px;margin:10px auto;border-radius:10px;overflow:hidden;background:#000}
     #result{margin-top:12px;padding:12px;border-radius:8px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none}
-    .btn{display:inline-block;padding:10px 14px;margin-right:8px;border-radius:8px;background:#1db954;color:#fff;text-decoration:none}
-    button{padding:10px 14px;border-radius:8px;border:0;background:#0070f3;color:#fff}
     #status{margin-top:12px;color:#666;font-size:0.95rem}
     small{color:#777}
   </style>
@@ -27,8 +25,6 @@
 
     <div id="result">
       <p id="decodedText"></p>
-      <a id="openLink" class="btn" target="_blank" rel="noopener">Open in Spotify</a>
-      <button id="scanAgain">Scan opnieuw</button>
     </div>
 
     <p id="status"><small>Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.</small></p>
@@ -41,13 +37,10 @@
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
       const decodedTextEl = document.getElementById('decodedText');
-      const openLink = document.getElementById('openLink');
-      const scanAgainBtn = document.getElementById('scanAgain');
       const resultDiv = document.getElementById('result');
 
       const config = { fps: 10, qrbox: 250 };
 
-      // create scanner instance
       const html5QrCode = new Html5Qrcode('reader');
 
       function showStatus(msg) { status.textContent = msg; }
@@ -57,7 +50,6 @@
         resultDiv.style.display = 'block';
 
         let link = null;
-        // spotify URI -> convert to open.spotify.com
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
           if (parts[1] === 'track' && parts[2]) link = 'https://open.spotify.com/track/' + parts[2];
@@ -68,26 +60,21 @@
         }
 
         if (link) {
-          openLink.href = link;
-          openLink.style.display = 'inline-block';
-        } else {
-          openLink.style.display = 'none';
+          // open direct
+          window.location.href = link;
         }
 
-        // stop camera
         html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
       }
 
       function onScanSuccess(decodedText, decodedResult) {
-        // called when a code is scanned
         handleScanText(decodedText);
       }
 
       function onScanFailure(error) {
-        // optional: console.log('scan failure', error);
+        // scan failure logs optional
       }
 
-      // Try to start with the back camera (environment). If that fails, fallback to enumerating cameras.
       html5QrCode
         .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
         .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
@@ -101,7 +88,6 @@
                 return;
               }
 
-              // kies camera: liever een camera met 'back'/'rear'/'environment' in de label
               let cameraId = cameras[0].id;
               for (const cam of cameras) {
                 if (/(back|rear|environment)/i.test(cam.label)) { cameraId = cam.id; break; }
@@ -114,23 +100,6 @@
             })
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
         });
-
-      scanAgainBtn.addEventListener('click', function () {
-        resultDiv.style.display = 'none';
-        decodedTextEl.textContent = '';
-        showStatus('Scanner herstarten...');
-
-        Html5Qrcode.getCameras()
-          .then((cameras) => {
-            if (!cameras || cameras.length === 0) { showStatus('Geen camera gevonden'); return; }
-            let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
-            html5QrCode
-              .start(cameraId, config, onScanSuccess, onScanFailure)
-              .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
-              .catch((e) => showStatus('Kon camera niet starten: ' + e));
-          })
-          .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
-      });
     });
   </script>
 </body>
