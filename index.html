@@ -30,36 +30,22 @@
       function showStatus(msg) { status.textContent = msg; }
 
       function parseSpotifyLink(text) {
-        let appLink = null;
+        let trackId = null;
         if (text.startsWith('spotify:')) {
           const parts = text.split(':');
-          if (parts[1] === 'track' && parts[2]) {
-            appLink = 'spotify://track/' + parts[2];
-          }
+          if (parts[1] === 'track' && parts[2]) trackId = parts[2];
         } else if (text.includes('open.spotify.com/track/')) {
           const match = text.match(/track\/([a-zA-Z0-9]+)/);
-          if (match) {
-            appLink = 'spotify://track/' + match[1];
-          }
+          if (match) trackId = match[1];
         }
-        return appLink;
-      }
-
-      function openSpotify(appLink) {
-        // tijdelijke redirect via blob en timeout, zodat Safari teruggaat naar deze pagina bij terug
-        const redirectScript = `window.location='${appLink}'; setTimeout(()=>{window.close()},100);`;
-        const blob = new Blob([redirectScript], {type:'text/javascript'});
-        const url = URL.createObjectURL(blob);
-        const iframe = document.createElement('iframe');
-        iframe.style.display='none';
-        iframe.src = url;
-        document.body.appendChild(iframe);
+        return trackId ? `redirect.html?track=${trackId}` : null;
       }
 
       function onScanSuccess(decodedText, decodedResult) {
-        const appLink = parseSpotifyLink(decodedText);
-        if (appLink) {
-          openSpotify(appLink);
+        const redirectUrl = parseSpotifyLink(decodedText);
+        if (redirectUrl) {
+          // open redirect page in dezelfde tab
+          window.location.href = redirectUrl;
         }
       }
 
