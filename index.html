@@ -2,13 +2,19 @@
 <html lang="nl">
 <head>
   <meta charset="utf-8" />
-  <!-- viewport zo instellen dat er niet gezoomd kan worden -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- iOS standalone modus -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Spotify QR Scanner">
+
+  <!-- Koppel PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS iconen -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
   <title>Spotify QR Scanner</title>
   <style>
@@ -22,8 +28,9 @@
       color: #fff;
       text-align: center;
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial;
-      overflow: hidden;       /* voorkomt scrollen */
-      touch-action: none;     /* voorkomt swipe/zoom gestures */
+      overflow: hidden;            /* voorkomt scrollen */
+      overscroll-behavior: none;   /* voorkomt "rubber band" effect */
+      touch-action: none;          /* voorkomt pinch-zoom/swipe */
     }
 
     .wrap {
@@ -33,7 +40,6 @@
       box-sizing: border-box;
     }
 
-    /* Logo & naam */
     #logo {
       max-width: 150px;
       margin: 0 auto 10px;
@@ -47,7 +53,6 @@
       color: #1db954;
     }
 
-    /* Scanner box */
     #reader {
       width: 100%;
       max-width: 640px;
@@ -60,7 +65,6 @@
       position: relative;
     }
 
-    /* Result box */
     #result {
       margin-top: 12px;
       padding: 12px;
@@ -71,7 +75,6 @@
       color: #fff;
     }
 
-    /* Buttons */
     .btn {
       display: inline-block;
       padding: 10px 14px;
@@ -90,7 +93,6 @@
       color: #fff;
     }
 
-    /* Status */
     #status {
       margin-top: 12px;
       color: #aaa;
@@ -116,15 +118,13 @@
 
     <p id="status">
       <small>
-        Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app), moet je de scanner in de Spotify-app gebruiken. 
-        Deze pagina scant gewone QR-codes/URLs.
+        Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app),
+        moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.
       </small>
     </p>
   </div>
 
-  <!-- html5-qrcode library (CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const status = document.getElementById('status');
@@ -160,19 +160,18 @@
         html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
       }
 
-      function onScanSuccess(decodedText, decodedResult) {
+      function onScanSuccess(decodedText) {
         handleScanText(decodedText);
       }
 
-      function onScanFailure(error) {
-        // geen melding bij mislukte scan
+      function onScanFailure() {
+        // stil bij mislukte scan
       }
 
-      // Start camera
       html5QrCode
         .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
         .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
-        .catch((err) => {
+        .catch(() => {
           showStatus('Kon achtercamera niet direct openen, probeer fallback...');
           Html5Qrcode.getCameras()
             .then((cameras) => {
@@ -186,7 +185,6 @@
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
         });
 
-      // Scan opnieuw
       scanAgainBtn.addEventListener('click', function () {
         resultDiv.style.display = 'none';
         showStatus('Scanner herstarten...');
@@ -202,6 +200,11 @@
           .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
       });
     });
+
+    // Service worker registreren
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
   </script>
 </body>
 </html>
