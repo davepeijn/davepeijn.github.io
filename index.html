@@ -8,7 +8,7 @@
   <!-- iOS standalone modus -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Spotify QR Scanner">
+  <meta name="apple-mobile-web-app-title" content="Hitster Joyce">
 
   <!-- Koppel PWA manifest -->
   <link rel="manifest" href="manifest.json">
@@ -16,7 +16,7 @@
   <!-- iOS iconen -->
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <title>Spotify QR Scanner</title>
+  <title>Hitster Joyce</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
@@ -179,7 +179,7 @@
               let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
               html5QrCode
                 .start(cameraId, config, onScanSuccess, onScanFailure)
-                .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+                .then(() => showStatus(''))
                 .catch((e) => showStatus('Kon camera niet starten: ' + e));
             })
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
