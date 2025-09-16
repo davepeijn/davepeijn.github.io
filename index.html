@@ -170,7 +170,7 @@
 
       html5QrCode
         .start({ facingMode: { exact: 'environment' } }, config, onScanSuccess, onScanFailure)
-        .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+        .then(() => showStatus(' '))
         .catch(() => {
           showStatus('Kon achtercamera niet direct openen, probeer fallback...');
           Html5Qrcode.getCameras()
@@ -179,7 +179,7 @@
               let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
               html5QrCode
                 .start(cameraId, config, onScanSuccess, onScanFailure)
-                .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+                .then(() => showStatus(' '))
                 .catch((e) => showStatus('Kon camera niet starten: ' + e));
             })
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
