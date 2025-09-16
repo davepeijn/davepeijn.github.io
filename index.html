@@ -13,7 +13,7 @@
   <!-- Koppel PWA manifest -->
   <link rel="manifest" href="manifest.json">
 
-  <!-- iOS iconen -->
+  <!-- iOS icon -->
   <link rel="apple-touch-icon" href="icons/icon-192.png">
 
   <title>Hitster Joyce</title>
@@ -28,9 +28,9 @@
       color: #fff;
       text-align: center;
       font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', Arial;
-      overflow: hidden;            /* voorkomt scrollen */
-      overscroll-behavior: none;   /* voorkomt "rubber band" effect */
-      touch-action: none;          /* voorkomt pinch-zoom/swipe */
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
     }
 
     .wrap {
@@ -150,11 +150,14 @@
           link = text;
         }
 
-        if (link) {
+        if (link && link.includes('spotify')) {
           openLink.href = link;
           openLink.style.display = 'inline-block';
+          openLink.textContent = "Open in Spotify";
+          showStatus("Spotify track gevonden ✅");
         } else {
           openLink.style.display = 'none';
+          showStatus("Geen Spotify lied herkend ❌");
         }
 
         html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
@@ -179,7 +182,7 @@
               let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
               html5QrCode
                 .start(cameraId, config, onScanSuccess, onScanFailure)
-                .then(() => showStatus(''))
+                .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
                 .catch((e) => showStatus('Kon camera niet starten: ' + e));
             })
             .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
@@ -201,7 +204,6 @@
       });
     });
 
-    // Service worker registreren
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
