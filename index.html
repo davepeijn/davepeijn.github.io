@@ -118,10 +118,6 @@
     </div>
 
     <p id="status">
-      <small>
-        Tip: Als je een Spotify "scan code" wilt scannen (de speciale balkjes in de Spotify-app),
-        moet je de scanner in de Spotify-app gebruiken. Deze pagina scant gewone QR-codes/URLs.
-      </small>
     </p>
   </div>
 
@@ -198,7 +194,7 @@
             let cameraId = cameras.find(c => /(back|rear|environment)/i.test(c.label))?.id || cameras[0].id;
             html5QrCode
               .start(cameraId, config, onScanSuccess, onScanFailure)
-              .then(() => showStatus('Camera gestart — richt de camera op de QR-code'))
+              .then(() => showStatus(' '))
               .catch((e) => showStatus('Kon camera niet starten: ' + e));
           })
           .catch((e) => showStatus('Fout bij camera-toegang: ' + e));
